@@ -547,8 +547,6 @@ function main() {
 }
 
 // Run the CLI
-if (require.main === module) {
-  main();
-}
+main();
 
 module.exports = { DiscordClient };
