@@ -41,21 +41,17 @@ function parseArgs() {
           parsed.options[key] = value;
         } else if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
           // Collect all non-option arguments until next option or end
-          let optionValue = args[i + 1];
+          const valueParts = [args[i + 1]];
           let nextIndex = i + 2;
           
-          // Check if this looks like a multi-word value by looking ahead
-          // If the next few arguments don't start with '-' and don't look like commands,
-          // they might be part of a quoted string that got split
+          // Keep collecting until we hit an option (--something) or a known command
           while (nextIndex < args.length && 
-                 !args[nextIndex].startsWith('-') && 
-                 !isCommand(args[nextIndex]) &&
-                 nextIndex <= i + 5) { // Limit to avoid consuming too much
-            optionValue += ' ' + args[nextIndex];
+                 !args[nextIndex].startsWith('-')) {
+            valueParts.push(args[nextIndex]);
             nextIndex++;
           }
           
-          parsed.options[key] = optionValue;
+          parsed.options[key] = valueParts.join(' ');
           i = nextIndex - 1; // Skip the consumed arguments
         } else {
           parsed.options[key] = true;
@@ -93,12 +89,6 @@ function parseArgs() {
   }
   
   return parsed;
-}
-
-// Helper function to check if a word looks like a Discord command
-function isCommand(word) {
-  const commands = ['send', 'embed', 'messages', 'channel', 'me', 'send-file', 'dm', 'channels', 'help'];
-  return commands.includes(word);
 }
 
 // Discord Client Class - Uses secure token system
