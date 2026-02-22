@@ -69,6 +69,18 @@ pave run discord send "Important announcement" --channel 123456789 --tts
 
 # Send as normal notification (not silent)
 pave run discord send "Alert!" --channel 123456789 --no-silent
+
+# Send long message from file
+pave run discord send --input message.txt --channel 123456789
+
+# Send message via pipe (great for command output)
+echo "Hello from pipe!" | pave run discord send --stdin --channel 123456789
+
+# Send command output to Discord
+pave run bamboohr whos-out --week --summary | pave run discord send --stdin --channel 123456789
+
+# Send AI-processed content to Discord
+pave chat "Format this data nicely" | pave run discord send --stdin --channel 123456789
 ```
 
 ### Rich Embeds
@@ -248,14 +260,32 @@ pave run discord embed \
   --channel 123456789
 ```
 
-### Send Logs
+### Send Command Output
 
 ```bash
 #!/bin/bash
-# Send log file
-pave run discord send-file /var/log/app.log \
-  --message "📋 Latest application logs" \
-  --channel 123456789
+# Send who's out report
+pave run bamboohr whos-out --week --summary | pave run discord send --stdin --channel 123456789
+
+# Send system status
+uptime | pave run discord send --stdin --channel 123456789
+
+# Send processed logs
+tail -10 /var/log/app.log | pave run discord send --stdin --channel 123456789
+```
+
+### AI-Enhanced Messages
+
+```bash
+#!/bin/bash
+# Create and send AI-formatted report
+echo "Raw data: Server CPU 85%, Memory 70%, Disk 60%" | \
+  pave chat "Format this as a nice Discord status report with emojis" | \
+  pave run discord send --stdin --channel 123456789
+
+# Process and send file content
+pave chat --input report.txt "Summarize this for Discord" | \
+  pave run discord send --stdin --channel 123456789
 ```
 
 ## API Reference
@@ -264,7 +294,7 @@ pave run discord send-file /var/log/app.log \
 
 | Command | Description | Arguments | Key Options |
 |---------|-------------|-----------|-------------|
-| `send` | Send text message | `<message>` | `--channel`, `--tts` |
+| `send` | Send text message | `<message>` | `--channel`, `--tts`, `--input`, `--stdin` |
 | `embed` | Send rich embed | - | `--title`, `--description`, `--color` |
 | `send-file` | Upload file | `<file>` | `--channel`, `--message` |
 | `messages` | Read messages | - | `--channel`, `--limit` |
@@ -278,6 +308,8 @@ pave run discord send-file /var/log/app.log \
 | Option | Description |
 |--------|-------------|
 | `--channel <id>` | Discord channel ID |
+| `--input <file>` | Read content from file |
+| `--stdin` | Read content from stdin (pipe) |
 | `--summary` | Human-readable output |
 | `--json` | Raw JSON output |
 | `--no-silent` | Normal notifications |

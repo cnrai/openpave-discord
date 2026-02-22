@@ -24,6 +24,20 @@ const path = require('path');
 // Parse command line arguments  
 const args = process.argv.slice(2);
 
+/**
+ * Read content from stdin (for piped input)
+ */
+function readStdin() {
+  const fs = require('fs');
+  
+  try {
+    // Read all data from stdin synchronously
+    return fs.readFileSync(0, 'utf8');
+  } catch (error) {
+    throw new Error('Failed to read from stdin. Make sure to pipe input: echo "message" | pave run discord send --stdin --channel ID');
+  }
+}
+
 function parseArgs() {
   const parsed = {
     command: null,
@@ -506,6 +520,8 @@ function main() {
     console.log('');
     console.log('Commands:');
     console.log('  send <message>           Send a message to a channel');
+    console.log('  send --input <file>      Send message from file');
+    console.log('  send --stdin             Send message from stdin (pipe)');
     console.log('  embed                    Send an embedded message');
     console.log('  messages                 Get messages from a channel');
     console.log('  channel                  Get channel information');
@@ -523,6 +539,8 @@ function main() {
     console.log('');
     console.log('Examples:');
     console.log('  pave run discord send "Hello world" --channel 123456789');
+    console.log('  echo "Long message" | pave run discord send --stdin --channel 123456789');
+    console.log('  pave run discord send --input message.txt --channel 123456789');
     console.log('  pave run discord embed --title "Alert" --description "System status" --channel 123456789');
     console.log('  pave run discord messages --channel 123456789 --limit 10 --summary');
     console.log('  pave run discord dm 123456789  # Create DM with user ID');
@@ -536,11 +554,40 @@ function main() {
   try {
     switch (command) {
       case 'send':
-        if (positional.length === 0) {
+        let messageContent = '';
+        
+        if (options.stdin) {
+          // Read from stdin
+          messageContent = readStdin();
+        } else if (options.input) {
+          // Read from file
+          const fs = require('fs');
+          const path = require('path');
+          
+          if (!fs.existsSync(options.input)) {
+            console.error(`Error: Input file not found: ${options.input}`);
+            process.exit(1);
+          }
+          
+          messageContent = fs.readFileSync(options.input, 'utf8').trim();
+        } else if (positional.length > 0) {
+          // Use positional argument
+          messageContent = positional[0];
+        } else {
           console.error('Error: Message content is required');
+          console.error('Use one of:');
+          console.error('  pave run discord send "message text" --channel ID');
+          console.error('  pave run discord send --input file.txt --channel ID');
+          console.error('  echo "message" | pave run discord send --stdin --channel ID');
           process.exit(1);
         }
-        result = client.sendMessage(positional[0], {
+        
+        if (!messageContent.trim()) {
+          console.error('Error: Message content cannot be empty');
+          process.exit(1);
+        }
+        
+        result = client.sendMessage(messageContent, {
           channelId: options.channel || options.c,
           tts: options.tts,
           silent: !options['no-silent']

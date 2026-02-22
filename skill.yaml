@@ -25,6 +25,8 @@ commands:
       - <message>
     options:
       - -c, --channel <channelId>
+      - --input <file>
+      - --stdin
       - --tts
       - --no-silent
       - --summary
