@@ -74,36 +74,52 @@ function parseArgs() {
 // Discord Client Class - Uses secure token system
 class DiscordClient {
   constructor() {
-    // Check if discord token is available via secure token system
-    if (typeof hasToken === 'function' && !hasToken('discord')) {
+    this.baseUrl = 'https://discord.com/api/v9';
+    this.tokenChecked = false;
+  }
+
+  /**
+   * Check if secure token system is available and configured
+   */
+  checkTokens() {
+    if (this.tokenChecked) return;
+    
+    // Check if secure token functions are available
+    if (typeof hasToken !== 'function' || typeof authenticatedFetch !== 'function') {
+      throw new Error('Secure token system not available. Make sure you\'re running this via: pave run discord');
+    }
+    
+    // Check if discord token is configured
+    if (!hasToken('discord')) {
       console.error('Discord token not configured.');
       console.error('');
       console.error('Add to ~/.pave/permissions.yaml:');
       console.error(JSON.stringify({
-        discord: {
-          env: 'DISCORD_TOKEN',
-          type: 'api_key',
-          domains: ['discord.com', '*.discord.com'],
-          placement: { type: 'header', name: 'Authorization', format: 'Bot {token}' }
+        tokens: {
+          discord: {
+            env: 'DISCORD_TOKEN',
+            type: 'api_key',
+            domains: ['discord.com', '*.discord.com'],
+            placement: { type: 'header', name: 'Authorization', format: 'Bot {token}' }
+          }
         }
       }, null, 2));
       console.error('');
       console.error('Then set environment variable:');
       console.error('  DISCORD_TOKEN=your_bot_token');
       console.error('');
-      process.exit(1);
+      throw new Error('Discord token not configured');
     }
-
-    this.baseUrl = 'https://discord.com/api/v9';
+    
+    this.tokenChecked = true;
   }
 
   /**
    * Make an authenticated request to Discord API using secure token system
    */
   request(endpoint, options = {}) {
-    if (typeof authenticatedFetch !== 'function') {
-      throw new Error('Secure token system not available. Run with: pave run discord ...');
-    }
+    // Ensure tokens are checked before making requests
+    this.checkTokens();
 
     const url = `${this.baseUrl}${endpoint}`;
     
@@ -130,8 +146,7 @@ class DiscordClient {
       return response.json();
     } catch (error) {
       if (error.message.includes('Token not found')) {
-        console.error('Discord token not found. Please configure the secure token system.');
-        process.exit(1);
+        throw new Error('Discord token not found. Please configure the secure token system.');
       }
       throw error;
     }
