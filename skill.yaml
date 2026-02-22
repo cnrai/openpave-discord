@@ -1,0 +1,139 @@
+# OpenPAVE Discord Skill
+# Send messages and interact with Discord channels securely
+
+name: discord
+version: 1.0.0
+description: Send messages and interact with Discord channels securely
+
+author:
+  name: cnrai
+  url: https://github.com/cnrai
+
+license: MIT
+homepage: https://github.com/cnrai/openpave-discord
+repository: cnrai/openpave-discord
+
+# Execution pattern
+pattern: sandbox
+entrypoint: index.js
+
+# Available commands
+commands:
+  - name: send
+    description: Send a message to a Discord channel
+    args:
+      - <message>
+    options:
+      - -c, --channel <channelId>
+      - --tts
+      - --no-silent
+      - --summary
+      - --json
+
+  - name: embed
+    description: Send an embedded message to a Discord channel
+    options:
+      - -c, --channel <channelId>
+      - -t, --title <title>
+      - -d, --description <description>
+      - --color <color>
+      - --url <url>
+      - --footer <text>
+      - --thumbnail <url>
+      - --image <url>
+      - --author <name>
+      - --author-url <url>
+      - --author-icon <url>
+      - -m, --message <content>
+      - --no-silent
+      - --summary
+      - --json
+
+  - name: messages
+    description: Get messages from a Discord channel
+    options:
+      - -c, --channel <channelId>
+      - -l, --limit <number>
+      - --before <messageId>
+      - --after <messageId>
+      - --summary
+      - --json
+
+  - name: channel
+    description: Get information about a Discord channel
+    options:
+      - -c, --channel <channelId>
+      - --summary
+      - --json
+
+  - name: me
+    description: Get information about the authenticated user
+    options:
+      - --summary
+      - --json
+
+  - name: send-file
+    description: Send a file or image to a Discord channel
+    args:
+      - <file>
+    options:
+      - -c, --channel <channelId>
+      - -m, --message <content>
+      - --no-silent
+      - --summary
+      - --json
+
+# Token configuration for secure sandbox access
+tokens:
+  discord:
+    type: api_key
+    description: Discord bot token for API access
+    domains:
+      - discord.com
+      - "*.discord.com"
+    env:
+      required:
+        - DISCORD_TOKEN
+    config:
+      env: DISCORD_TOKEN
+      type: api_key
+      domains:
+        - discord.com
+        - "*.discord.com"
+      placement:
+        type: header
+        name: Authorization
+        format: "Bot {token}"
+
+# Sandbox permissions
+permissions:
+  fs.read:
+    - "*"  # Needed for file uploads
+  fs.write: []
+  network:
+    - discord.com
+  modules:
+    - fs
+    - path
+  system: []
+
+# Platform compatibility
+platforms:
+  - darwin
+  - linux
+  - win32
+
+engines:
+  node: ">=16.0.0"
+
+# Metadata
+keywords:
+  - discord
+  - chat
+  - messaging
+  - bot
+  - notifications
+  - communication
+
+category: communication
+icon: "\U0001F4AC"
