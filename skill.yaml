@@ -83,6 +83,20 @@ commands:
       - --summary
       - --json
 
+  - name: dm
+    description: Create or find DM channel with a user
+    args:
+      - <userID>
+    options:
+      - --summary
+      - --json
+
+  - name: channels
+    description: List accessible channels and servers
+    options:
+      - --summary
+      - --json
+
 # Token configuration for secure sandbox access
 tokens:
   discord:

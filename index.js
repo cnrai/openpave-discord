@@ -243,6 +243,32 @@ class DiscordClient {
   }
 
   /**
+   * Create or get DM channel with a user
+   */
+  createDMChannel(userId) {
+    return this.request('/users/@me/channels', {
+      method: 'POST',
+      body: JSON.stringify({
+        recipient_id: userId
+      })
+    });
+  }
+
+  /**
+   * Get list of guilds (servers) the bot is in
+   */
+  getGuilds() {
+    return this.request('/users/@me/guilds');
+  }
+
+  /**
+   * Get channels in a guild
+   */
+  getGuildChannels(guildId) {
+    return this.request(`/guilds/${guildId}/channels`);
+  }
+
+  /**
    * Send a file to a Discord channel (simplified implementation)
    * Note: Full file upload support requires multipart form handling in secure token system
    */
@@ -381,13 +407,40 @@ function formatOutput(data, options) {
 
 function formatSummary(data) {
   if (Array.isArray(data)) {
+    // Handle different array types
+    if (data.length === 0) {
+      return 'No results found';
+    }
+    
     // Messages array
-    return data.map(msg => {
-      const timestamp = new Date(msg.timestamp).toLocaleString();
-      const author = msg.author?.username || 'Unknown';
-      const content = msg.content?.substring(0, 100) || '(empty)';
-      return `[${timestamp}] ${author}: ${content}`;
-    }).join('\n');
+    if (data[0] && data[0].content !== undefined) {
+      return data.map(msg => {
+        const timestamp = new Date(msg.timestamp).toLocaleString();
+        const author = msg.author?.username || 'Unknown';
+        const content = msg.content?.substring(0, 100) || '(empty)';
+        return `[${timestamp}] ${author}: ${content}`;
+      }).join('\n');
+    }
+    
+    // Guilds/servers array
+    if (data[0] && data[0].name && data[0].id) {
+      return data.map(guild => {
+        return `🏠 ${guild.name} (ID: ${guild.id})${guild.owner ? ' [Owner]' : ''}`;
+      }).join('\n');
+    }
+    
+    // Channels array
+    if (data[0] && data[0].type !== undefined) {
+      const typeNames = ['Text', 'DM', 'Voice', 'Group DM', 'Category', 'Announcement', 'Store', '', '', '', 'News', 'Store', '', 'Stage Voice', 'Directory', 'Forum'];
+      return data.map(channel => {
+        const type = typeNames[channel.type] || `Type ${channel.type}`;
+        const name = channel.name ? `#${channel.name}` : 'DM';
+        return `${type === 'DM' ? '💬' : '📄'} ${name} (ID: ${channel.id}, Type: ${type})`;
+      }).join('\n');
+    }
+    
+    // Generic array
+    return data.map(item => JSON.stringify(item, null, 2)).join('\n---\n');
   }
   
   if (data.username) {
@@ -402,8 +455,15 @@ function formatSummary(data) {
     return `Channel: #${data.name} (${type}, ID: ${data.id})`;
   }
   
+  if (data.id && data.type === 1) {
+    // DM Channel object
+    const recipient = data.recipients?.[0];
+    const recipientName = recipient ? `${recipient.username}#${recipient.discriminator}` : 'Unknown User';
+    return `💬 DM Channel with ${recipientName} (ID: ${data.id})`;
+  }
+  
   if (data.id) {
-    // Message or other object with ID
+    // Generic object with ID
     return `✅ Success (ID: ${data.id})`;
   }
   
@@ -426,6 +486,8 @@ function main() {
     console.log('  channel                  Get channel information');
     console.log('  me                       Get current user info');
     console.log('  send-file <file>         Send a file to a channel');
+    console.log('  dm <userID>              Create/find DM channel with user');
+    console.log('  channels                 List accessible channels/servers');
     console.log('');
     console.log('Options:');
     console.log('  -c, --channel <id>       Discord channel ID');
@@ -438,6 +500,8 @@ function main() {
     console.log('  pave run discord send "Hello world" --channel 123456789');
     console.log('  pave run discord embed --title "Alert" --description "System status" --channel 123456789');
     console.log('  pave run discord messages --channel 123456789 --limit 10 --summary');
+    console.log('  pave run discord dm 123456789  # Create DM with user ID');
+    console.log('  pave run discord channels --summary  # List servers/channels');
     return;
   }
 
@@ -516,6 +580,52 @@ function main() {
           content: options.message || options.m,
           silent: !options['no-silent']
         });
+        break;
+
+      case 'dm':
+        if (positional.length === 0) {
+          console.error('Error: User ID is required');
+          console.error('Usage: pave run discord dm <userID>');
+          process.exit(1);
+        }
+        result = client.createDMChannel(positional[0]);
+        break;
+
+      case 'channels':
+        // Get guilds and their channels
+        const guilds = client.getGuilds();
+        
+        if (options.summary) {
+          let output = 'Accessible Servers/Channels:\n\n';
+          
+          for (const guild of guilds) {
+            output += `🏠 ${guild.name} (ID: ${guild.id})\n`;
+            
+            try {
+              const channels = client.getGuildChannels(guild.id);
+              const textChannels = channels.filter(c => c.type === 0 || c.type === 5); // Text and announcement channels
+              
+              if (textChannels.length > 0) {
+                for (const channel of textChannels.slice(0, 5)) { // Show first 5 channels
+                  output += `   📄 #${channel.name} (ID: ${channel.id})\n`;
+                }
+                if (textChannels.length > 5) {
+                  output += `   ... and ${textChannels.length - 5} more channels\n`;
+                }
+              }
+            } catch (e) {
+              output += `   (Cannot access channels: ${e.message})\n`;
+            }
+            
+            output += '\n';
+          }
+          
+          console.log(output);
+          return;
+        } else {
+          // JSON format - return full guild data
+          result = guilds;
+        }
         break;
 
       default:

@@ -129,7 +129,7 @@ pave run discord messages \
   --limit 5
 ```
 
-### Channel & User Info
+### Get Channel & User Info
 
 ```bash
 # Get channel information
@@ -137,6 +137,15 @@ pave run discord channel --channel 123456789 --summary
 
 # Get bot user information
 pave run discord me --summary
+
+# Create or find DM channel with a user (returns channel ID)
+pave run discord dm 123456789 --summary
+
+# List all accessible servers and channels
+pave run discord channels --summary
+
+# Get raw JSON data for servers
+pave run discord channels --json
 ```
 
 ## Output Formats
@@ -261,6 +270,8 @@ pave run discord send-file /var/log/app.log \
 | `messages` | Read messages | - | `--channel`, `--limit` |
 | `channel` | Channel info | - | `--channel` |
 | `me` | Bot user info | - | - |
+| `dm` | Create/find DM | `<userID>` | - |
+| `channels` | List servers/channels | - | - |
 
 ### Global Options
 
