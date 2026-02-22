@@ -33,6 +33,7 @@ function parseArgs() {
   
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
+    
     if (arg.startsWith('-')) {
       if (arg.startsWith('--')) {
         const [key, value] = arg.slice(2).split('=', 2);
@@ -66,6 +67,14 @@ function parseArgs() {
         parsed.positional.push(arg);
       }
     }
+  }
+  
+  // IMPORTANT: For commands like 'send', join all remaining positional args as the message
+  // This fixes the issue where "Hello world test" becomes just "Hello"
+  if (parsed.command === 'send' && parsed.positional.length > 1) {
+    // Join all positional arguments with spaces to reconstruct the full message
+    const fullMessage = parsed.positional.join(' ');
+    parsed.positional = [fullMessage];
   }
   
   return parsed;
@@ -473,6 +482,11 @@ function formatSummary(data) {
 // Main CLI logic
 function main() {
   const { command, positional, options } = parseArgs();
+  
+  // Debug: Log parsing results (comment out in production)
+  // console.log('DEBUG: Parsed command:', command);
+  // console.log('DEBUG: Parsed positional:', positional);
+  // console.log('DEBUG: Parsed options:', options);
   
   if (!command || command === 'help' || options.help) {
     console.log('Discord CLI - Send messages and interact with Discord channels');
