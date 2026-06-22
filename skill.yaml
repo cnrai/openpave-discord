@@ -2,7 +2,7 @@
 # Send messages and interact with Discord channels securely
 
 name: discord
-version: 1.0.0
+version: 1.0.1
 description: Send messages and interact with Discord channels securely
 
 author:
@@ -30,7 +30,6 @@ commands:
       - --tts
       - --no-silent
       - --summary
-      - --json
 
   - name: embed
     description: Send an embedded message to a Discord channel
@@ -49,7 +48,6 @@ commands:
       - -m, --message <content>
       - --no-silent
       - --summary
-      - --json
 
   - name: messages
     description: Get messages from a Discord channel
@@ -59,20 +57,17 @@ commands:
       - --before <messageId>
       - --after <messageId>
       - --summary
-      - --json
 
   - name: channel
     description: Get information about a Discord channel
     options:
       - -c, --channel <channelId>
       - --summary
-      - --json
 
   - name: me
     description: Get information about the authenticated user
     options:
       - --summary
-      - --json
 
   - name: send-file
     description: Send a file or image to a Discord channel
@@ -83,7 +78,6 @@ commands:
       - -m, --message <content>
       - --no-silent
       - --summary
-      - --json
 
   - name: dm
     description: Create or find DM channel with a user
@@ -91,13 +85,11 @@ commands:
       - <userID>
     options:
       - --summary
-      - --json
 
   - name: channels
     description: List accessible channels and servers
     options:
       - --summary
-      - --json
 
 # Token configuration for secure sandbox access
 tokens:
