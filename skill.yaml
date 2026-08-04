@@ -2,7 +2,7 @@
 # Send messages and interact with Discord channels securely
 
 name: discord
-version: 1.0.1
+version: 1.0.2
 description: Send messages and interact with Discord channels securely
 
 author:
@@ -16,6 +16,25 @@ repository: cnrai/openpave-discord
 # Execution pattern
 pattern: sandbox
 entrypoint: index.js
+
+usage_notes: |
+  IMPORTANT FOR AI AGENTS:
+  
+  Message Formatting:
+  - Always use @ mentions when sending messages: `<@USER_ID>` format
+  - Send reminders and personal messages via DM, NOT to public channels
+  - Use `--input` for multi-line messages (shell truncates at first newline)
+  - For multi-line content: write to file first, then use --input or --stdin
+  
+  Channel Usage:
+  - Use embed messages for structured content (tables, alerts, summaries)
+  - Use plain messages for conversational updates
+  - Use send-file for sharing generated content (PDFs, images, reports)
+  
+  Alert Best Practices:
+  - Keep alerts concise — one-line summary with link for details
+  - Use embeds for batch alerts (e.g., "5 new leads found — review in Wrike")
+  - Don't spam channels — batch related updates into single messages
 
 # Available commands
 commands:
